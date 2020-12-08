@@ -43,10 +43,15 @@ String boostLabel = "     Boost: ";
 void tbSetup()
 {
   Mouse.begin();
-  tbWriteColor(0xff, 0xfc, 0xf0, 0x00, TRACKBALL_ADDR);
-  tbWriteColor(0xff, 0xfc, 0xf0, 0x00, TRACKBALL2_ADDR);
+  randomSeed(analogRead(0));
+  updateTbColors();
 }
 
+void updateTbColors()
+{
+  tbWriteColor(random(255), random(255), random(255), random(255), TRACKBALL_ADDR);
+  tbWriteColor(random(255), random(255), random(255), random(255), TRACKBALL2_ADDR);
+}
 void tbWriteColor(char r, char g, char b, char w, byte trackBallAddr)
 {
   Serial.println("Colors");
@@ -143,6 +148,8 @@ const byte mod = 255;
 const byte lms = 254;
 const byte rms = 253;
 const byte layers = 2;
+const byte macro1 = 252;
+const byte macro2 = 251;
 const int keyBufSize = 6;
 int currentLayer = 0;
 
@@ -179,26 +186,14 @@ byte rightKeyMap[layers][colCount][rowCount] = {
      {110, 109, 44, 46, 47, 133},
      {lms, rms, 218, 217, 91, 93},
      {0, 32, 216, 215, 0, 0},
-     {176,
-      mod,
-      132,
-      135,
-      0,
-      0}},
+     {176, mod, 132, 135, 0, 0}},
     {{200, 201, 202, 203, 204, 205},
      {0, 0, 0, 0, 0, 0},
      {0, 0, 0, 0, 0, 0},
      {0, 0, 0, 0, 0, 0},
      {0, 0, 0, 0, 0, 0},
-     {0, 0, 0, 0, 0, 0},
-     {
-         0,
-         mod,
-         0,
-         0,
-         0,
-         0,
-     }}};
+     {0, 0, 252, 251, 0, 0},
+     {0, mod, 0, 0, 0, 0}}};
 
 byte (*keyMap)[colCount][rowCount] = rightKeyMap;
 
@@ -235,9 +230,9 @@ void processKeyStates(bool isLeft)
   {
     if (keyStates[i] != 0)
     {
-      byte col = (keyStates[0] & colMask) >> 5;
-      byte row = (keyStates[0] & rowMask) >> 2;
-      byte btnState = keyStates[0] & 1;
+      byte col = (keyStates[i] & colMask) >> 5;
+      byte row = (keyStates[i] & rowMask) >> 2;
+      byte btnState = keyStates[i] & 1;
       handleKeyPress(keyMap[currentLayer][col][row], btnState);
       keyStates[i] = 0;
     }
@@ -260,6 +255,20 @@ void handleKeyPress(byte key, byte btnState)
       currentLayer = 1;
       println("layer 1");
     }
+    else if (key == macro1)
+    {
+      Keyboard.press(135);
+      Keyboard.press(132);
+      Keyboard.press(216);
+      println("macro1 pressed");
+    }
+    else if (key == macro2)
+    {
+      Keyboard.press(135);
+      Keyboard.press(132);
+      Keyboard.press(215);
+      println("macro2 pressed");
+    }
     else
     {
       Keyboard.press(key);
@@ -281,6 +290,20 @@ void handleKeyPress(byte key, byte btnState)
     {
       currentLayer = 0;
       println("layer 0");
+    }
+    else if (key == macro1)
+    {
+      Keyboard.release(135);
+      Keyboard.release(132);
+      Keyboard.release(216);
+      println("macro1 release");
+    }
+    else if (key == macro2)
+    {
+      Keyboard.release(135);
+      Keyboard.release(132);
+      Keyboard.release(215);
+      println("macro2 release");
     }
     else
     {
@@ -312,8 +335,8 @@ void kbRead()
       {
         if (keyIdx >= keyBufSize)
         {
-          return; // buffer full
           println("Key buffer full");
+          return; // buffer full
         }
 
         byte state = colIndex;
@@ -322,7 +345,7 @@ void kbRead()
         state <<= 2;
         state += 2; // flip the empty bit as a nonce so we can distinguish between no value and 0,0 released
         state += btnState;
-        printBits(state);
+        //printBits(state);
         keyStates[keyIdx++] = state;
       }
       keys[colIndex][rowIndex] = btnState;
