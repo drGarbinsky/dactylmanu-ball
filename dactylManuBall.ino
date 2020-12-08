@@ -3,7 +3,7 @@
 #include <Wire.h>
 
 bool LOG = true;
-bool isMaster = true;
+bool isMaster = false;
 bool isLeft = isMaster;
 
 //################### Common #########################
@@ -143,7 +143,7 @@ const byte mod = 255;
 const byte lms = 254;
 const byte rms = 253;
 const byte layers = 2;
-const byte keyBufSize = 6;
+const int keyBufSize = 6;
 int currentLayer = 0;
 
 byte rows[] = {6, 7, 8, 9, 10, 11};
@@ -222,8 +222,17 @@ void kbSetup()
   }
 }
 
-void processKeyStates()
+void processKeyStates(bool isLeft)
 {
+  if (isLeft == true)
+  {
+    keyMap = leftKeyMap;
+  }
+  else
+  {
+    keyMap = rightKeyMap;
+  }
+
   for (int i = 0; i < keyBufSize; i++)
   {
     if (keyStates[i] != 0)
@@ -231,10 +240,6 @@ void processKeyStates()
       byte col = (keyStates[0] & colMask) >> 5;
       byte row = (keyStates[0] & rowMask) >> 2;
       byte btnState = keyStates[0] & 1;
-
-      printIntln(col);
-      printIntln(row);
-      printIntln(btnState);
       handleKeyPress(keyMap[currentLayer][col][row], btnState);
       keyStates[i] = 0;
     }
@@ -332,34 +337,38 @@ void kbRead()
 
 void kbSlaveRead()
 {
-
-  Wire.requestFrom(SLAVE_ADDR, 5);
+  byte idx = 0;
+  Wire.requestFrom(SLAVE_ADDR, keyBufSize);
   while (Wire.available())
   {
-    printInt(Wire.read());
-    println("");
+    keyStates[idx++] = Wire.read();
   }
 }
 void kbReadBytes()
 {
-
-  Wire.write("hello");
+  kbRead();
+  Wire.write(keyStates, keyBufSize);
+  initKeyBuf(); //clear buff after sending
 }
-//###############################################################################
 
-void setup()
+void initKeyBuf()
 {
   for (int i = 0; i < keyBufSize; i++)
   {
     keyStates[i] = 0;
   }
+}
+//###############################################################################
 
+void setup()
+{
+  initKeyBuf();
   Serial.begin(115200);
 
   if (isMaster == true)
   {
     println("primary");
-    Wire.setClock(400000);
+    Wire.setClock(100000);
     Wire.begin();
 
     tbSetup();
@@ -380,9 +389,10 @@ void loop()
     tbRead(TRACKBALL_ADDR);
     tbRead(TRACKBALL2_ADDR);
     kbSlaveRead();
+    processKeyStates(false);
+    kbRead();
+    processKeyStates(true);
   }
-  kbRead();
-  processKeyStates();
 }
 
 void printIntln(int msg)
