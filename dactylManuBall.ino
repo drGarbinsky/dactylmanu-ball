@@ -2,7 +2,7 @@
 #include <Mouse.h>
 #include <Wire.h>
 
-bool LOG = true;
+bool LOG = false;
 bool isMaster = true;
 bool isLeft = isMaster;
 
@@ -66,7 +66,6 @@ void tbRead(int trackBallAddr)
   Wire.beginTransmission(trackBallAddr);
   Wire.write(TRACK_BALL_REG_LEFT);
   Wire.endTransmission();
-  delay(10);
   Wire.requestFrom(trackBallAddr, 5);
   if (Wire.available() < 5)
   {
@@ -150,6 +149,8 @@ const byte rms = 253;
 const byte layers = 2;
 const byte macro1 = 252;
 const byte macro2 = 251;
+const byte macro3 = 250;
+const byte macro4 = 249;
 const int keyBufSize = 6;
 int currentLayer = 0;
 
