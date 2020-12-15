@@ -25,13 +25,17 @@ bool isLeft = isMaster;
 #define REG_INT 0xF9
 #define MSK_INT_OUT_EN 0b00000010
 
-const int xScaleFactor = 2;
-
-int tbReadCount = 100;
-
+const float xScaleFactor = 4.44;
+const float yScaleFactor = 2.5;
+const int sampleCount = 6;
+const byte xSamples = 0;
+const byte ySamples = 1;
+float xySamples[sampleCount][2];
+int currSample = 0;
 float boost = 1;
 float y = 0;
 float x = 0;
+
 int clck = 0;
 
 String xLabel = "X: ";
@@ -42,6 +46,12 @@ String boostLabel = "     Boost: ";
 
 void tbSetup()
 {
+  for (int i = 0; i < sampleCount; i++)
+  {
+    xySamples[i][xSamples] = 0;
+    xySamples[i][ySamples] = 0;
+  }
+
   Mouse.begin();
   randomSeed(analogRead(0));
   updateTbColors();
@@ -59,6 +69,43 @@ void tbWriteColor(char r, char g, char b, char w, byte trackBallAddr)
   Wire.beginTransmission(trackBallAddr);
   Wire.write(bytes, 5);
   Wire.endTransmission();
+}
+
+void advSampleCount()
+{
+  currSample += 1;
+  if (currSample >= sampleCount)
+  {
+    currSample = 0;
+  }
+}
+
+void tbReadScroll(int trackBallAddr)
+{
+
+  Wire.beginTransmission(trackBallAddr);
+  Wire.write(TRACK_BALL_REG_LEFT);
+  Wire.endTransmission();
+  Wire.requestFrom(trackBallAddr, 5);
+  if (Wire.available() < 5)
+  {
+    return;
+  }
+  byte bytes[5];
+  for (int i = 0; i < 5; i++)
+  {
+    bytes[i] = Wire.read();
+  }
+
+  y = ((bytes[0] - bytes[1]));
+  x = ((bytes[3] - bytes[2]));
+
+  int btn = bytes[4];
+  if (y != 0 )
+  {
+    y = y * .7;
+    Mouse.move(0, 0, y * -1);
+  }
 }
 
 void tbRead(int trackBallAddr)
@@ -84,35 +131,66 @@ void tbRead(int trackBallAddr)
 
   if (y != 0 || x != 0)
   {
-    printInt(int(bytes[0]));
-    printInt(int(bytes[1]));
-    printInt(int(bytes[2]));
-    printInt(int(bytes[3]));
-    print(" ");
+    print("bbbefore ");
+    print(xLabel + x + yLabel + y);
+    int prevSample = currSample - 1;
+    if (prevSample < 0)
+    {
+      prevSample = sampleCount - 1;
+    }
+
+    if (x == 0 && xySamples[prevSample][xSamples] != 0)
+    {
+      x = xySamples[prevSample][xSamples] * .85;
+    }
+
+    if (y == 0 && xySamples[prevSample][ySamples] != 0)
+    {
+      y = xySamples[prevSample][ySamples] * .85;
+    }
+
+    xySamples[currSample][xSamples] = x;
+    xySamples[currSample][ySamples] = y;
+    advSampleCount();
+    print("  before ");
+    print(xLabel + x + yLabel + y);
+    x = 0;
+    y = 0;
+
+    for (int i = 0; i < sampleCount; i++)
+    {
+      x += xySamples[i][xSamples];
+      y += xySamples[i][ySamples];
+    }
+
+    print(" after ");
+    x = x / sampleCount;
+    y = y / sampleCount;
 
     if (x < 0)
     {
-      x = pow(x * -1, 3) * -1;
+      x = pow(x * -1, 2.9) * -1;
     }
     else
     {
-      x = pow(x, 3);
+      x = pow(x, 2.9);
     }
     if (y < 0)
     {
-      y = pow(y * -1, 3) * -1;
+      y = pow(y * -1, 2.9) * -1;
     }
     else
     {
-      y = pow(y, 3);
+      y = pow(y, 2.9);
     }
     x = min(x, 127);
     x = max(x, -127);
     x = x * xScaleFactor;
     y = min(y, 127);
     y = max(y, -127);
+    y = y * yScaleFactor;
 
-    if (!isLeft)
+    if (trackBallAddr == TRACKBALL2_ADDR)
     {
       y = y * -1;
       x = x * -1;
@@ -176,7 +254,7 @@ byte leftKeyMap[layers][colCount][rowCount] = {
      {0, 0, 0, 0, 0, 0},
      {0, 0, 0, 0, 0, 0},
      {0, 0, 0, 0, 0, 0},
-     {0, 0, 0, 0, 0, 0},
+     {130, 0, 0, 0, 0, 0},
      {0, 0, 0, 0, 0, 0},
      {0, 0, 0, 0, 0, mod}}};
 // right map
@@ -390,7 +468,7 @@ void setup()
   if (isMaster == true)
   {
     println("primary");
-    Wire.setClock(100000);
+    Wire.setClock(400000);
     Wire.begin();
 
     tbSetup();
@@ -408,7 +486,7 @@ void loop()
 {
   if (isMaster == true)
   {
-    tbRead(TRACKBALL_ADDR);
+    tbReadScroll(TRACKBALL_ADDR);
     tbRead(TRACKBALL2_ADDR);
     kbSlaveRead();
     processKeyStates(false);
