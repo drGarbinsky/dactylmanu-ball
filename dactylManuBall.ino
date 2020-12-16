@@ -35,9 +35,9 @@ int currSample = 0;
 float boost = 1;
 float y = 0;
 float x = 0;
-
+char wheel;
 int clck = 0;
-
+char wheelSkip = 0;
 String xLabel = "X: ";
 String yLabel = "     Y: ";
 
@@ -82,7 +82,6 @@ void advSampleCount()
 
 void tbReadScroll(int trackBallAddr)
 {
-
   Wire.beginTransmission(trackBallAddr);
   Wire.write(TRACK_BALL_REG_LEFT);
   Wire.endTransmission();
@@ -97,14 +96,20 @@ void tbReadScroll(int trackBallAddr)
     bytes[i] = Wire.read();
   }
 
-  y = ((bytes[0] - bytes[1]));
-  x = ((bytes[3] - bytes[2]));
+  wheel = ((bytes[0] - bytes[1]));
 
   int btn = bytes[4];
-  if (y != 0 )
+  if (wheel != 0)
   {
-    y = y * .7;
-    Mouse.move(0, 0, y * -1);
+    if (wheelSkip++ < 3)
+    {
+      return;
+    }
+
+    wheelSkip = 0;
+    printIntln(wheel);
+    wheel = wheel * -1;
+    Mouse.move(0, 0, wheel);
   }
 }
 
@@ -128,11 +133,8 @@ void tbRead(int trackBallAddr)
   x = ((bytes[3] - bytes[2]));
 
   int btn = bytes[4];
-
   if (y != 0 || x != 0)
   {
-    print("bbbefore ");
-    print(xLabel + x + yLabel + y);
     int prevSample = currSample - 1;
     if (prevSample < 0)
     {
@@ -151,9 +153,8 @@ void tbRead(int trackBallAddr)
 
     xySamples[currSample][xSamples] = x;
     xySamples[currSample][ySamples] = y;
-    advSampleCount();
-    print("  before ");
-    print(xLabel + x + yLabel + y);
+   
+
     x = 0;
     y = 0;
 
@@ -161,27 +162,31 @@ void tbRead(int trackBallAddr)
     {
       x += xySamples[i][xSamples];
       y += xySamples[i][ySamples];
+      if (i == currSample)
+      {
+        x += xySamples[i][xSamples];
+        y += xySamples[i][ySamples];
+      }
     }
-
-    print(" after ");
-    x = x / sampleCount;
-    y = y / sampleCount;
+    advSampleCount();
+    x = x / (sampleCount + 1);
+    y = y / (sampleCount + 1);
 
     if (x < 0)
     {
-      x = pow(x * -1, 2.9) * -1;
+      x = pow(x * -1, 3.2) * -1;
     }
     else
     {
-      x = pow(x, 2.9);
+      x = pow(x, 3.2);
     }
     if (y < 0)
     {
-      y = pow(y * -1, 2.9) * -1;
+      y = pow(y * -1, 3.2) * -1;
     }
     else
     {
-      y = pow(y, 2.9);
+      y = pow(y, 3.2);
     }
     x = min(x, 127);
     x = max(x, -127);
@@ -199,18 +204,19 @@ void tbRead(int trackBallAddr)
     Mouse.move(x, y, 0);
   }
 
+   mouseBtn(btn, MOUSE_LEFT);
+}
+
+void mouseBtn(byte btn, char button)
+{
   if (btn != clck)
   {
     clck = btn;
-    if (clck == 129)
+    if (clck >= 128 && !Mouse.isPressed(button))
     {
-      Mouse.click();
+      Mouse.press(button);
     }
-    else if (clck == 128)
-    {
-      Mouse.press();
-    }
-    else if (Mouse.isPressed())
+    else if (clck <= 1 && Mouse.isPressed())
     {
       Mouse.release();
     }
