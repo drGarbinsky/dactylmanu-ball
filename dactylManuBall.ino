@@ -27,12 +27,13 @@ bool isLeft = isMaster;
 
 const float xScaleFactor = 4.44;
 const float yScaleFactor = 2.5;
-const int sampleCount = 6;
+const int sampleCount = 9;
 const byte xSamples = 0;
 const byte ySamples = 1;
-float xySamples[sampleCount][2];
+const byte sampleMills = 2;
+long lastMills = 0;
+float xySamples[sampleCount][3];
 int currSample = 0;
-float boost = 1;
 float y = 0;
 float x = 0;
 char wheel;
@@ -41,21 +42,23 @@ char wheelSkip = 0;
 byte wheelSkipLimit = 2;
 String xLabel = "X: ";
 String yLabel = "     Y: ";
-
 String clickLabel = "Click: ";
-String boostLabel = "     Boost: ";
 
 void tbSetup()
+{
+
+  Mouse.begin();
+  randomSeed(analogRead(0));
+  updateTbColors();
+}
+void clearSamples()
 {
   for (int i = 0; i < sampleCount; i++)
   {
     xySamples[i][xSamples] = 0;
     xySamples[i][ySamples] = 0;
+    xySamples[i][sampleMills] = 1;
   }
-
-  Mouse.begin();
-  randomSeed(analogRead(0));
-  updateTbColors();
 }
 
 void updateTbColors()
@@ -80,7 +83,15 @@ void advSampleCount()
     currSample = 0;
   }
 }
-
+int prevSampleIdx()
+{
+  int prevSample = currSample - 1;
+  if (prevSample < 0)
+  {
+    prevSample = sampleCount - 1;
+  }
+  return prevSample;
+}
 void tbReadScroll(int trackBallAddr)
 {
   Wire.beginTransmission(trackBallAddr);
@@ -136,12 +147,16 @@ void tbRead(int trackBallAddr)
   int btn = bytes[4];
   if (y != 0 || x != 0)
   {
-    int prevSample = currSample - 1;
-    if (prevSample < 0)
+    long ms = millis();
+    long elapsedMills = ms - lastMills;
+    if (elapsedMills > 158)
     {
-      prevSample = sampleCount - 1;
+      clearSamples();
+      println("cleared");
     }
 
+    lastMills = ms;
+    int prevSample = prevSampleIdx();
     if (x == 0 && xySamples[prevSample][xSamples] != 0)
     {
       x = xySamples[prevSample][xSamples] * .85;
@@ -154,58 +169,66 @@ void tbRead(int trackBallAddr)
 
     xySamples[currSample][xSamples] = x;
     xySamples[currSample][ySamples] = y;
-   
+    xySamples[currSample][sampleMills] = elapsedMills;
 
     x = 0;
     y = 0;
-
+    float avgMills = 0;
     for (int i = 0; i < sampleCount; i++)
     {
       x += xySamples[i][xSamples];
       y += xySamples[i][ySamples];
+      avgMills += xySamples[i][sampleMills];
       if (i == currSample)
       {
         x += xySamples[i][xSamples];
         y += xySamples[i][ySamples];
+        avgMills += xySamples[i][sampleMills];
       }
     }
     advSampleCount();
     x = x / (sampleCount + 1);
     y = y / (sampleCount + 1);
+    avgMills = avgMills / (sampleCount + 1);
+
+    float p = 2.8;
+    p = p + (max(17 - avgMills, 0) / 16);
 
     if (x < 0)
     {
-      x = pow(x * -1, 3.2) * -1;
+      x = pow(x * -1, p) * -1;
     }
     else
     {
-      x = pow(x, 3.2);
+      x = pow(x, p);
     }
     if (y < 0)
     {
-      y = pow(y * -1, 3.2) * -1;
+      y = pow(y * -1, p) * -1;
     }
     else
     {
-      y = pow(y, 3.2);
+      y = pow(y, p);
     }
+
+    x = x * xScaleFactor;
     x = min(x, 127);
     x = max(x, -127);
-    x = x * xScaleFactor;
+
+    y = y * yScaleFactor;
     y = min(y, 127);
     y = max(y, -127);
-    y = y * yScaleFactor;
 
     if (trackBallAddr == TRACKBALL2_ADDR)
     {
       y = y * -1;
       x = x * -1;
     }
-    println(xLabel + x + yLabel + y);
+    println(xLabel + x + yLabel + y + " mills:" + avgMills + " p:" + p);
     Mouse.move(x, y, 0);
   }
 
-   mouseBtn(btn, MOUSE_LEFT);
+  mouseBtn(btn, MOUSE_LEFT);
 }
 
 void mouseBtn(byte btn, char button)
