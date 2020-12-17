@@ -38,6 +38,7 @@ float x = 0;
 char wheel;
 int clck = 0;
 char wheelSkip = 0;
+byte wheelSkipLimit = 2;
 String xLabel = "X: ";
 String yLabel = "     Y: ";
 
@@ -101,7 +102,7 @@ void tbReadScroll(int trackBallAddr)
   int btn = bytes[4];
   if (wheel != 0)
   {
-    if (wheelSkip++ < 3)
+    if (wheelSkip++ < wheelSkipLimit)
     {
       return;
     }
