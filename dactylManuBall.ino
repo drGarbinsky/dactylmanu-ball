@@ -111,6 +111,7 @@ void tbReadScroll(int trackBallAddr)
   wheel = ((bytes[0] - bytes[1]));
 
   int btn = bytes[4];
+  mouseBtn(btn,MOUSE_MIDDLE);
   if (wheel != 0)
   {
     if (wheelSkip++ < wheelSkipLimit)
@@ -125,7 +126,7 @@ void tbReadScroll(int trackBallAddr)
   }
 }
 
-void tbRead(int trackBallAddr)
+void tbRead(int trackBallAddr, bool invert)
 {
   Wire.beginTransmission(trackBallAddr);
   Wire.write(TRACK_BALL_REG_LEFT);
@@ -218,8 +219,7 @@ void tbRead(int trackBallAddr)
     y = y * yScaleFactor;
     y = min(y, 127);
     y = max(y, -127);
-
-    if (trackBallAddr == TRACKBALL2_ADDR)
+    if (invert)
     {
       y = y * -1;
       x = x * -1;
@@ -228,7 +228,7 @@ void tbRead(int trackBallAddr)
     Mouse.move(x, y, 0);
   }
 
-  mouseBtn(btn, MOUSE_LEFT);
+  mouseBtn(btn, MOUSE_RIGHT);
 }
 
 void mouseBtn(byte btn, char button)
@@ -240,9 +240,9 @@ void mouseBtn(byte btn, char button)
     {
       Mouse.press(button);
     }
-    else if (clck <= 1 && Mouse.isPressed())
+    else if (clck <= 1 && Mouse.isPressed(button))
     {
-      Mouse.release();
+      Mouse.release(button);
     }
 
     println(clickLabel + clck);
@@ -517,7 +517,7 @@ void loop()
   if (isMaster == true)
   {
     tbReadScroll(TRACKBALL_ADDR);
-    tbRead(TRACKBALL2_ADDR);
+    tbRead(TRACKBALL2_ADDR, true);
     kbSlaveRead();
     processKeyStates(false);
     kbRead();
