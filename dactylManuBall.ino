@@ -25,14 +25,15 @@ bool isLeft = isMaster;
 #define REG_INT 0xF9
 #define MSK_INT_OUT_EN 0b00000010
 
-const float xScaleFactor = 4.44;
-const float yScaleFactor = 2.5;
-const int sampleCount = 9;
+const float xScaleFactor = 10;
+const float yScaleFactor = 8;
+const int sampleCount = 10;
 const byte xSamples = 0;
 const byte ySamples = 1;
 const byte sampleMills = 2;
 long lastMills = 0;
 float xySamples[sampleCount][3];
+float zeroSampleTapperFactor = .3;
 int currSample = 0;
 float y = 0;
 float x = 0;
@@ -160,40 +161,42 @@ void tbRead(int trackBallAddr, bool invert)
     int prevSample = prevSampleIdx();
     if (x == 0 && xySamples[prevSample][xSamples] != 0)
     {
-      x = xySamples[prevSample][xSamples] * .85;
+      x = xySamples[prevSample][xSamples] * zeroSampleTapperFactor;
     }
 
     if (y == 0 && xySamples[prevSample][ySamples] != 0)
     {
-      y = xySamples[prevSample][ySamples] * .85;
+      y = xySamples[prevSample][ySamples] * zeroSampleTapperFactor;
     }
 
     xySamples[currSample][xSamples] = x;
     xySamples[currSample][ySamples] = y;
     xySamples[currSample][sampleMills] = elapsedMills;
 
+    int offset = sampleCount - 1 - currSample;
+    int avgDenom = (sampleCount * (sampleCount +1)) / 2;
     x = 0;
     y = 0;
     float avgMills = 0;
     for (int i = 0; i < sampleCount; i++)
     {
-      x += xySamples[i][xSamples];
-      y += xySamples[i][ySamples];
-      avgMills += xySamples[i][sampleMills];
-      if (i == currSample)
+      int j = i + offset;
+      if(j >= sampleCount)
       {
-        x += xySamples[i][xSamples];
-        y += xySamples[i][ySamples];
-        avgMills += xySamples[i][sampleMills];
+        j = j - sampleCount;
       }
+      j++;
+      x += (xySamples[i][xSamples] * j);
+      y += (xySamples[i][ySamples] * j);
+      avgMills += (xySamples[i][sampleMills] * j);
     }
     advSampleCount();
-    x = x / (sampleCount + 1);
-    y = y / (sampleCount + 1);
-    avgMills = avgMills / (sampleCount + 1);
+    x = x / avgDenom;
+    y = y / avgDenom;
+    avgMills = avgMills / avgDenom;
 
-    float p = 2.8;
-    p = p + (max(17 - avgMills, 0) / 16);
+    float p = 2.5;
+    p = p + (max(17 - avgMills, 0) / 12);
 
     if (x < 0)
     {
