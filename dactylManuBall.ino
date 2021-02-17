@@ -25,8 +25,9 @@ bool isLeft = isMaster;
 #define REG_INT 0xF9
 #define MSK_INT_OUT_EN 0b00000010
 
-const float xScaleFactor = 10;
-const float yScaleFactor = 8;
+const float rampExp = 2.8;
+const float xScaleFactor = 8;
+const float yScaleFactor = 7;
 const int sampleCount = 10;
 const byte xSamples = 0;
 const byte ySamples = 1;
@@ -195,7 +196,7 @@ void tbRead(int trackBallAddr, bool invert)
     y = y / avgDenom;
     avgMills = avgMills / avgDenom;
 
-    float p = 2.5;
+    float p = rampExp;
     p = p + (max(17 - avgMills, 0) / 12);
 
     if (x < 0)
