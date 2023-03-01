@@ -1,5 +1,0 @@
-{
-    "sketch": "dactylManuBall.ino",
-    "port": "COM3",
-    "board": "arduino:avr:micro"
-}
