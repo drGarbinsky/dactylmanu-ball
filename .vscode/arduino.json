@@ -1,0 +1,5 @@
+{
+    "configuration": "usb=hid,speed=150,opt=o2std,keys=en-us",
+    "board": "teensy:avr:teensy40",
+    "sketch": "dactylmanu-ball.ino"
+}
