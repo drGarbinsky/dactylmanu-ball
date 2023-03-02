@@ -17,35 +17,35 @@ int leftKeyMap[layers][rowCount][colCount] = {
   { { KEY_EQUAL, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5 },
     { KEY_ESC, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T },
     { KEY_TAB, KEY_A, KEY_S, KEY_D, KEY_F, KEY_G },
-    { KEY_LEFT_ALT, KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B },
-    { KEY_INSERT , KEY_TILDE, KEY_PAGE_UP, KEY_HOME, KEY_ENTER, KEY_DELETE },
+    { KEY_LEFT_SHIFT, KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B },
+    { KEY_MEDIA_PLAY, KEY_TILDE, KEY_PAGE_UP, KEY_HOME, 3, KEY_DELETE },
     { 0, 0, KEY_PAGE_DOWN, KEY_END, KEY_BACKSPACE, mod },
-    { 0, 0, 0, KEY_LEFT_SHIFT, KEY_LEFT_CTRL, mod } },
+    { 0, 0, KEY_MEDIA_VOLUME_DEC, KEY_MEDIA_VOLUME_INC, KEY_LEFT_CTRL, KEY_LEFT_ALT } },
   { { KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, mod },
-    { 0, 0, 0, 0, 0,  0} }
+    { 0, 0, 0, 0, 0, 0 } }
 };
 
 // right map
 int rightKeyMap[layers][rowCount][colCount] = {
-  { { 54, 55, 56, 57, 48, 45 },
-    { 121, 117, 105, 111, 112, 92 },
-    { 104, 106, 107, 108, 59, 39 },
-    { 110, 109, 44, 46, 47, 133 },
-    { lms, rms, 218, 217, 91, 93 },
-    { 0, 32, 216, 215, 0, 0 },
-    { 176, mod, 132, 135, 0, 0 } },
-  { { 200, 201, 202, 203, 204, 205 },
+  { { KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS },
+    { KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_BACKSLASH },
+    { KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON, KEY_QUOTE },
+    { KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_RIGHT_BRACE, KEY_SLASH },
+    { lms, rms, KEY_UP, KEY_LEFT_BRACE, KEY_RIGHT, KEY_RIGHT_CTRL },
+    { mod, KEY_SPACE, KEY_DOWN, KEY_LEFT, 0, 0 },
+    { 1, KEY_ENTER, KEY_RIGHT_SHIFT, KEY_RIGHT_GUI, 0, 0 } },
+  { { KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_F12 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 252, 251, 0, 0 },
-    { 0, mod, 0, 0, 0, 0 } }
+    { mod, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0 } }
 };
 
 
@@ -79,19 +79,19 @@ void handleKeyPress(int key, byte btnState, int keyIndex) {
       currentLayer = 1;
       println("layer 1");
     } else if (key == macro1) {
-      Keyboard.press(135);
-      Keyboard.press(132);
-      Keyboard.press(216);
+      // Keyboard.press(135);
+      // Keyboard.press(132);
+      // Keyboard.press(216);
       println("macro1 pressed");
     } else if (key == macro2) {
-      Keyboard.press(135);
-      Keyboard.press(132);
-      Keyboard.press(215);
+      // Keyboard.press(135);
+      // Keyboard.press(132);
+      // Keyboard.press(215);
       println("macro2 pressed");
     } else {
       Keyboard.press(key);
       //keyboard_keys[keyIndex]  = key;
-      
+
       printInt(int(key));
       println(" pressed");
     }
@@ -104,18 +104,18 @@ void handleKeyPress(int key, byte btnState, int keyIndex) {
       currentLayer = 0;
       println("layer 0");
     } else if (key == macro1) {
-      Keyboard.release(135);
-      Keyboard.release(132);
-      Keyboard.release(216);
+      // Keyboard.release(135);
+      // Keyboard.release(132);
+      // Keyboard.release(216);
       println("macro1 release");
     } else if (key == macro2) {
-      Keyboard.release(135);
-      Keyboard.release(132);
-      Keyboard.release(215);
+      // Keyboard.release(135);
+      // Keyboard.release(132);
+      // Keyboard.release(215);
       println("macro2 release");
     } else {
       Keyboard.release(key);
-    
+
       printInt(int(key));
       println(" released");
     }

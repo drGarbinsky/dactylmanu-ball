@@ -8,9 +8,7 @@ unsigned long curTime = micros();
 const int keyBufSize = 8;
 uint8_t keyBuffer[keyBufSize];
 bool keysSent = true;
-extern "C" uint32_t set_arm_clock(uint32_t frequency);  // required prototype
 void setup() {
-  set_arm_clock(150000000);
   Serial.begin(57600);
   Serial.println("Dactyl Manuball 2.0 starting...");
   isRightHalf = isRight();
@@ -20,18 +18,21 @@ void setup() {
     println("Left Side");
   }
 
-  print("DTR=");
-  println(Serial.dtr());
-  isPrimary = !isRightHalf;
-  // isPrimary = Serial.dtr();
-  // if (isPrimary) {
-  //   println("Is Primary");
-  // } else {
-  //   println("Is Secondary");
-  // }
+ 
+  //isPrimary = !isRightHalf;
+  if (!bitRead(USB1_PORTSC1, 7)) {
+    //usb connected
+    isPrimary = true;
+    println("Is Primary");
+  } else {
+    //usb disconnected
+    isPrimary = false;
+    println("Is Secondary");
+  }
+
 
   initKeyBuf();
-  setupBall();
+  setupBall(!isRightHalf);
   setupKeys();
   setupI2c(isPrimary);
   Serial.println("Keyboad ready");

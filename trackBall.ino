@@ -112,8 +112,9 @@ unsigned long lastButtonCheck = 0;
 //Be sure to add the SROM file into this sketch via "Sketch->Add File"
 extern const unsigned short firmware_length;
 extern const unsigned char firmware_data[];
-
-void setupBall() {
+bool invertXY = false;
+void setupBall(bool invert) {
+  invertXY = invert;
   pinMode(ncs, OUTPUT);
   pinMode(reset, INPUT_PULLUP);
   
@@ -132,7 +133,7 @@ void setupBall() {
 
   dx = dy = 0;
 
-  delay(1000);
+  delay(5000);
 
   //dispRegisters();
   initComplete = 9;
@@ -372,6 +373,11 @@ void readBall() {
       signed char mdx = constrain(dx, -127, 127);
       signed char mdy = constrain(dy, -127, 127);
       
+      if(invertXY){
+        mdx = mdx * -1;
+        mdy = mdy * -1;
+      }
+
       Mouse.move(mdx * -1, mdy, 0);
       
       dx = 0;
