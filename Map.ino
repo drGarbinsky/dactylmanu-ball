@@ -13,25 +13,25 @@ const byte macro4 = 249;
 const byte colMask = 0xE0;
 const byte rowMask = 0X1C;
 
-byte leftKeyMap[layers][rowCount][colCount] = {
-  { { 61, 49, 50, 51, 52, 53 },
-    { 177, 113, 119, 101, 114, 116 },
-    { 9, 97, 115, 100, 102, 103 },
-    { 129, 122, 120, 99, 118, 98 },
-    { 130, 96, 211, 	210, 32, 177 },
-    { 0, 0, 214, 213, 	8, 0 },
-    { 0, 0, 209, 128, 176, mod } },
-  { { 194, 195, 196, 197, 198, 199 },
+int leftKeyMap[layers][rowCount][colCount] = {
+  { { KEY_EQUAL, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5 },
+    { KEY_ESC, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T },
+    { KEY_TAB, KEY_A, KEY_S, KEY_D, KEY_F, KEY_G },
+    { KEY_LEFT_ALT, KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B },
+    { KEY_INSERT , KEY_TILDE, KEY_PAGE_UP, KEY_HOME, KEY_ENTER, KEY_DELETE },
+    { 0, 0, KEY_PAGE_DOWN, KEY_END, KEY_BACKSPACE, mod },
+    { 0, 0, 0, KEY_LEFT_SHIFT, KEY_LEFT_CTRL, mod } },
+  { { KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
-    { 130, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0, mod } }
+    { 0, 0, 0, 0, 0, mod },
+    { 0, 0, 0, 0, 0,  0} }
 };
 
 // right map
-byte rightKeyMap[layers][rowCount][colCount] = {
+int rightKeyMap[layers][rowCount][colCount] = {
   { { 54, 55, 56, 57, 48, 45 },
     { 121, 117, 105, 111, 112, 92 },
     { 104, 106, 107, 108, 59, 39 },
@@ -49,7 +49,7 @@ byte rightKeyMap[layers][rowCount][colCount] = {
 };
 
 
-byte (*keyMap)[rowCount][colCount] = rightKeyMap;
+int (*keyMap)[rowCount][colCount] = rightKeyMap;
 
 void processKeyStates(bool isRight, int keyBufSize, byte* keysBuffer) {
   if (isRight == false) {
@@ -58,17 +58,18 @@ void processKeyStates(bool isRight, int keyBufSize, byte* keysBuffer) {
     keyMap = rightKeyMap;
   }
 
-  for (int i = 0; i < keyBufSize; i++) {
+  for (int i = 0; i < keyBufSize && i < 6; i++) {
     if (keysBuffer[i] != 0) {
       byte col = (keysBuffer[i] & colMask) >> 5;
       byte row = (keysBuffer[i] & rowMask) >> 2;
       byte btnState = keysBuffer[i] & 1;
-      handleKeyPress(keyMap[currentLayer][row][col], btnState);
+      handleKeyPress(keyMap[currentLayer][row][col], btnState, i);
       keysBuffer[i] = 0;
     }
   }
+  //Keyboard.send_now();
 }
-void handleKeyPress(byte key, byte btnState) {
+void handleKeyPress(int key, byte btnState, int keyIndex) {
   if (btnState == 1) {
     if (key == lms) {
       Mouse.press(MOUSE_LEFT);
@@ -89,6 +90,8 @@ void handleKeyPress(byte key, byte btnState) {
       println("macro2 pressed");
     } else {
       Keyboard.press(key);
+      //keyboard_keys[keyIndex]  = key;
+      
       printInt(int(key));
       println(" pressed");
     }
@@ -112,6 +115,7 @@ void handleKeyPress(byte key, byte btnState) {
       println("macro2 release");
     } else {
       Keyboard.release(key);
+    
       printInt(int(key));
       println(" released");
     }

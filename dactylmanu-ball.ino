@@ -10,7 +10,6 @@ uint8_t keyBuffer[keyBufSize];
 bool keysSent = true;
 extern "C" uint32_t set_arm_clock(uint32_t frequency);  // required prototype
 void setup() {
-
   set_arm_clock(150000000);
   Serial.begin(57600);
   Serial.println("Dactyl Manuball 2.0 starting...");
