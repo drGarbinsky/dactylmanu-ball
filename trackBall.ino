@@ -6,88 +6,77 @@
 #include <SPI.h>
 #include <avr/pgmspace.h>
 
-#ifdef ADVANCE_MODE 
-  #include <AdvMouse.h>
-  #define MOUSE_BEGIN       AdvMouse.begin()
-  #define MOUSE_PRESS(x)    AdvMouse.press_(x)
-  #define MOUSE_RELEASE(x)  AdvMouse.release_(x)
-#else
-  #include <Mouse.h>
-  #define MOUSE_BEGIN       Mouse.begin()
-  #define MOUSE_PRESS(x)    Mouse.press(x)
-  #define MOUSE_RELEASE(x)  Mouse.release(x)
-#endif
 
 // Configurations
 // The default CPI value should be in between 100 -- 12000
-#define CPI       2000
-#define DEBOUNCE  10   //unit = ms.
+#define CPI 2000
+#define DEBOUNCE 10  //unit = ms.
 #define NUMCPI 4
 
 //Set this to a pin your buttons are attached
-#define NUMBTN   4
+#define NUMBTN 4
 #define Btn1_Pin 3  // left button
 #define Btn2_Pin 0  // right button
 #define Btn4_Pin 2  // middle button
 #define Btn8_Pin 1  // back button
 
 // Registers
-#define Product_ID  0x00
+#define Product_ID 0x00
 #define Revision_ID 0x01
-#define Motion  0x02
+#define Motion 0x02
 #define Delta_X_L 0x03
 #define Delta_X_H 0x04
 #define Delta_Y_L 0x05
 #define Delta_Y_H 0x06
 #define SQUAL 0x07
-#define Raw_Data_Sum  0x08
-#define Maximum_Raw_data  0x09
-#define Minimum_Raw_data  0x0A
+#define Raw_Data_Sum 0x08
+#define Maximum_Raw_data 0x09
+#define Minimum_Raw_data 0x0A
 #define Shutter_Lower 0x0B
 #define Shutter_Upper 0x0C
 #define Ripple_Control 0x0D
 #define Resolution_L 0x0E
 #define Resolution_H 0x0F
 #define Config2 0x10
-#define Angle_Tune  0x11
+#define Angle_Tune 0x11
 #define Frame_Capture 0x12
 #define SROM_Enable 0x13
 #define Run_Downshift 0x14
-#define Rest1_Rate_Lower  0x15
-#define Rest1_Rate_Upper  0x16
+#define Rest1_Rate_Lower 0x15
+#define Rest1_Rate_Upper 0x16
 #define Rest1_Downshift 0x17
-#define Rest2_Rate_Lower  0x18
-#define Rest2_Rate_Upper  0x19
+#define Rest2_Rate_Lower 0x18
+#define Rest2_Rate_Upper 0x19
 #define Rest2_Downshift 0x1A
-#define Rest3_Rate_Lower  0x1B
-#define Rest3_Rate_Upper  0x1C
+#define Rest3_Rate_Lower 0x1B
+#define Rest3_Rate_Upper 0x1C
 #define Observation 0x24
-#define Data_Out_Lower  0x25
-#define Data_Out_Upper  0x26
+#define Data_Out_Lower 0x25
+#define Data_Out_Upper 0x26
 #define SROM_ID 0x2A
-#define Min_SQ_Run  0x2B
-#define Raw_Data_Threshold  0x2C
+#define Min_SQ_Run 0x2B
+#define Raw_Data_Threshold 0x2C
 #define Control2 0x2D
 #define Config5_L 0x2E
 #define Config5_H 0x2F
-#define Power_Up_Reset  0x3A
-#define Shutdown  0x3B
-#define Inverse_Product_ID  0x3F
-#define LiftCutoff_Cal3  0x41
-#define Angle_Snap  0x42
-#define LiftCutoff_Cal1  0x4A
-#define Motion_Burst  0x50
+#define Power_Up_Reset 0x3A
+#define Shutdown 0x3B
+#define Inverse_Product_ID 0x3F
+#define LiftCutoff_Cal3 0x41
+#define Angle_Snap 0x42
+#define LiftCutoff_Cal1 0x4A
+#define Motion_Burst 0x50
 #define SROM_Load_Burst 0x62
 #define Lift_Config 0x63
-#define Raw_Data_Burst  0x64
-#define LiftCutoff_Cal2  0x65
+#define Raw_Data_Burst 0x64
+#define LiftCutoff_Cal2 0x65
 #define LiftCutoff_Cal_Timeout 0x71
-#define LiftCutoff_Cal_Min_Length  0x72
+#define LiftCutoff_Cal_Min_Length 0x72
 #define PWM_Period_Cnt 0x73
 #define PWM_Width_Cnt 0x74
 
-const int ncs = 10;  // This is the SPI "slave select" pin that the sensor is hooked up to
-const int reset = 8; // Optional
+const int ncs = 10;   // This is the SPI "slave select" pin that the sensor is hooked up to
+const int reset = 8;  // Optional
 
 
 
@@ -99,7 +88,7 @@ struct CpiUpdater {
   uint8_t target_cpi_index;
 };
 
-CpiUpdater CpiUpdate = {false, false, 3}; // Default Cpis[3] = 2000
+CpiUpdater CpiUpdate = { false, false, 3 };  // Default Cpis[3] = 2000
 
 byte initComplete = 0;
 bool inBurst = false;   // in busrt mode
@@ -117,12 +106,12 @@ void setupBall(bool invert) {
   invertXY = invert;
   pinMode(ncs, OUTPUT);
   pinMode(reset, INPUT_PULLUP);
-  
+
   pinMode(Btn1_Pin, INPUT_PULLUP);
   pinMode(Btn2_Pin, INPUT_PULLUP);
   pinMode(Btn4_Pin, INPUT_PULLUP);
   pinMode(Btn8_Pin, INPUT_PULLUP);
-  
+
   SPI.begin();
   SPI.setDataMode(SPI_MODE3);
   SPI.setBitOrder(MSBFIRST);
@@ -133,7 +122,7 @@ void setupBall(bool invert) {
 
   dx = dy = 0;
 
-  delay(5000);
+  delay(500);
 
   //dispRegisters();
   initComplete = 9;
@@ -155,14 +144,14 @@ byte adns_read_reg(byte reg_addr) {
   adns_com_begin();
 
   // send adress of the register, with MSBit = 0 to indicate it's a read
-  SPI.transfer(reg_addr & 0x7f );
-  delayMicroseconds(35); // tSRAD
+  SPI.transfer(reg_addr & 0x7f);
+  delayMicroseconds(35);  // tSRAD
   // read data
   byte data = SPI.transfer(0);
 
-  delayMicroseconds(1); // tSCLK-NCS for read operation is 120ns
+  delayMicroseconds(1);  // tSCLK-NCS for read operation is 120ns
   adns_com_end();
-  delayMicroseconds(19); //  tSRW/tSRR (=20us) minus tSCLK-NCS
+  delayMicroseconds(19);  //  tSRW/tSRR (=20us) minus tSCLK-NCS
 
   return data;
 }
@@ -171,13 +160,13 @@ void adns_write_reg(byte reg_addr, byte data) {
   adns_com_begin();
 
   //send adress of the register, with MSBit = 1 to indicate it's a write
-  SPI.transfer(reg_addr | 0x80 );
+  SPI.transfer(reg_addr | 0x80);
   //sent data
   SPI.transfer(data);
 
-  delayMicroseconds(20); // tSCLK-NCS for write operation
+  delayMicroseconds(20);  // tSCLK-NCS for write operation
   adns_com_end();
-  delayMicroseconds(100); // tSWW/tSWR (=120us) minus tSCLK-NCS. Could be shortened, but is looks like a safe lower bound
+  delayMicroseconds(100);  // tSWW/tSWR (=120us) minus tSCLK-NCS. Could be shortened, but is looks like a safe lower bound
 }
 
 void adns_upload_firmware() {
@@ -191,14 +180,14 @@ void adns_upload_firmware() {
   adns_write_reg(SROM_Enable, 0x1d);
 
   // wait for more than one frame period
-  delay(10); // assume that the frame rate is as low as 100fps... even if it should never be that low
+  delay(10);  // assume that the frame rate is as low as 100fps... even if it should never be that low
 
   // write 0x18 to SROM_enable to start SROM download
   adns_write_reg(SROM_Enable, 0x18);
 
   // write the SROM file (=firmware data)
   adns_com_begin();
-  SPI.transfer(SROM_Load_Burst | 0x80); // write burst destination adress
+  SPI.transfer(SROM_Load_Burst | 0x80);  // write burst destination adress
   delayMicroseconds(15);
 
   // send all bytes of the firmware
@@ -212,17 +201,16 @@ void adns_upload_firmware() {
   //Read the SROM_ID register to verify the ID before any other register reads or writes.
   adns_read_reg(SROM_ID);
 
-  //Write 0x00 (rest disable) to Config2 register for wired mouse or 0x20 for wireless mouse design. 
+  //Write 0x00 (rest disable) to Config2 register for wired mouse or 0x20 for wireless mouse design.
   adns_write_reg(Config2, 0x00);
 
   adns_com_end();
 }
 
-void setCPI(int cpi)
-{
+void setCPI(int cpi) {
   unsigned cpival = cpi / 50;
 
-  
+
   adns_com_begin();
   adns_write_reg(Resolution_L, (cpival & 0xFF));
   adns_write_reg(Resolution_H, ((cpival >> 8) & 0xFF));
@@ -236,21 +224,21 @@ void setCPI(int cpi)
 
 void performStartup(void) {
   // hard reset
-  adns_com_end(); // ensure that the serial port is reset
-  adns_com_begin(); // ensure that the serial port is reset
-  adns_com_end(); // ensure that the serial port is reset
-  
-  adns_write_reg(Shutdown, 0xb6); // Shutdown first
+  adns_com_end();    // ensure that the serial port is reset
+  adns_com_begin();  // ensure that the serial port is reset
+  adns_com_end();    // ensure that the serial port is reset
+
+  adns_write_reg(Shutdown, 0xb6);  // Shutdown first
   delay(300);
-  
-  adns_com_begin(); // drop and raise ncs to reset spi port
+
+  adns_com_begin();  // drop and raise ncs to reset spi port
   delayMicroseconds(40);
   adns_com_end();
   delayMicroseconds(40);
-  
-  adns_write_reg(Power_Up_Reset, 0x5a); // force reset
-  delay(50); // wait for it to reboot
-  
+
+  adns_write_reg(Power_Up_Reset, 0x5a);  // force reset
+  delay(50);                             // wait for it to reboot
+
   // read registers 0x02 to 0x06 (and discard the data)
   adns_read_reg(Motion);
   adns_read_reg(Delta_X_L);
@@ -294,33 +282,30 @@ void dispRegisters(void) {
   digitalWrite(ncs, HIGH);
 }
 
-void readBall() {
+bool readBall(int8_t* motionData) {
   byte burstBuffer[12];
   curTime = micros();
 
 
 
 
-  if(!inBurst)
-  {
-    adns_write_reg(Motion_Burst, 0x00); // start burst mode
+  if (!inBurst) {
+    adns_write_reg(Motion_Burst, 0x00);  // start burst mode
     lastTS = curTime;
     inBurst = true;
   }
-  
-  // if(elapsed >= 1000)  // polling interval : more than > 0.5 ms.
-  // {
-    adns_com_begin();
-    SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
 
-    SPI.transfer(Motion_Burst);    
-    delayMicroseconds(35); // waits for tSRAD
+  adns_com_begin();
+  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
 
-    SPI.transfer(burstBuffer, 12); // read burst buffer
-    delayMicroseconds(1); // tSCLK-NCS for read operation is 120ns
+  SPI.transfer(Motion_Burst);
+  delayMicroseconds(35);  // waits for tSRAD
 
-    SPI.endTransaction();
-    /*
+  SPI.transfer(burstBuffer, 12);  // read burst buffer
+  delayMicroseconds(1);           // tSCLK-NCS for read operation is 120ns
+
+  SPI.endTransaction();
+  /*
     BYTE[00] = Motion    = if the 7th bit is 1, a motion is detected.
            ==> 7 bit: MOT (1 when motion is detected)
            ==> 3 bit: 0 when chip is on surface / 1 when off surface
@@ -338,60 +323,46 @@ void readBall() {
     BYTE[10] = Shutter_Upper     = Shutter LSB
     BYTE[11] = Shutter_Lower     = Shutter MSB, Shutter = shutter is adjusted to keep the average raw data values within normal operating ranges
     */
-    
-    int motion = (burstBuffer[0] & 0x80) > 0;
-    int surface = (burstBuffer[0] & 0x08) > 0;   // 0 if on surface / 1 if off surface
- 
-    int yl = burstBuffer[2];
-    int yh = burstBuffer[3];
-    int xl = burstBuffer[4];
-    int xh = burstBuffer[5];
 
-    int squal = burstBuffer[6];
-    
-    int x = xh<<8 | xl;
-    int y = yh<<8 | yl;
+  int motion = (burstBuffer[0] & 0x80) > 0;
+  int surface = (burstBuffer[0] & 0x08) > 0;  // 0 if on surface / 1 if off surface
 
-    dx -= y;
-    dy -= x;
-      
-    adns_com_end();
+  int yl = burstBuffer[2];
+  int yh = burstBuffer[3];
+  int xl = burstBuffer[4];
+  int xh = burstBuffer[5];
 
-    // update only if a movement is detected.
+  int squal = burstBuffer[6];
 
-#ifdef ADVANCE_MODE 
-    if(AdvMouse.needSendReport() || motion)
-    {
-      AdvMouse.move(dx, dy, 0);
-      
-      dx = 0;
-      dy = 0;
-    }
-#else
-    if(motion)
-    {
-      signed char mdx = constrain(dx, -127, 127);
-      signed char mdy = constrain(dy, -127, 127);
-      
-      if(invertXY){
-        mdx = mdx * -1;
-        mdy = mdy * -1;
-      }
+  int x = xh << 8 | xl;
+  int y = yh << 8 | yl;
 
-      Mouse.move(mdx * -1, mdy, 0);
-      
-      dx = 0;
-      dy = 0;
-    }
-#endif
+  int16_t dx = 0;
+  int16_t dy = 0;
 
-    if(reportSQ && !surface)  // print surface quality
-    {
-      Serial.println(squal);
-    }
-    
-    lastTS = curTime;
-  //}
+  dx -= y;
+  dy -= x;
+
+  adns_com_end();
+
+  // update only if a movement is detected.
+
+  int8_t mdx = constrain(dx, -127, 127);
+  int8_t mdy = constrain(dy, -127, 127);
+
+  if (motion) {
+    motionData[0] = mdx;
+    motionData[1] = mdy;
+  }
+
+
+  if (reportSQ && !surface)  // print surface quality
+  {
+    println(squal);
+  }
+
+  lastTS = curTime;
+
 
   // update CPI cycled from button combo
   if (CpiUpdate.target_set == true && CpiUpdate.updated == false) {
@@ -400,48 +371,44 @@ void readBall() {
   }
 
   // command process routine
-  if(Serial.available() > 0)
-  {
+  if (Serial.available() > 0) {
     char c = Serial.read();
-    switch(c)
-    {
-      case 'Q':   // Toggle reporting surface quality
+    switch (c) {
+      case 'Q':  // Toggle reporting surface quality
         reportSQ = !reportSQ;
         break;
-      case 'I':   // sensor info (signature)
+      case 'I':  // sensor info (signature)
         inBurst = false;
         dispRegisters();
         break;
-      case 'C':   // set CPI
+      case 'C':  // set CPI
         int newCPI = readNumber();
         setCPI(newCPI);
         break;
     }
   }
+
+  return motion;
 }
 
-unsigned long readNumber()
-{
+unsigned long readNumber() {
   String inString = "";
-  for (int i = 0; i < 10; i++)
-  {
-    while (Serial.available() == 0);
+  for (int i = 0; i < 10; i++) {
+    while (Serial.available() == 0)
+      ;
     int inChar = Serial.read();
-    if (isDigit(inChar))
-    {
+    if (isDigit(inChar)) {
       inString += (char)inChar;
     }
 
-    if (inChar == '\n')
-    {
+    if (inChar == '\n') {
       int val = inString.toInt();
       return (unsigned long)val;
     }
   }
 
   // flush remain strings in serial buffer
-  while (Serial.available() > 0)
-  {
+  while (Serial.available() > 0) {
     Serial.read();
   }
   return 0UL;

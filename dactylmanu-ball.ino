@@ -1,12 +1,14 @@
 const int isRightPin = 7;
 const int isRightPinOut = 8;
 bool isPrimary = false;
-bool LOG = true;
+bool LOG = false;
 bool isRightHalf = false;
 unsigned long lastTS = 0;
 unsigned long curTime = micros();
-const int keyBufSize = 8;
+const int keyBufSize = 6;
 uint8_t keyBuffer[keyBufSize];
+const int ballBufSize = 2;
+int8_t ballMotionBuffer[ballBufSize];
 bool keysSent = true;
 void setup() {
   Serial.begin(57600);
@@ -18,8 +20,6 @@ void setup() {
     println("Left Side");
   }
 
- 
-  //isPrimary = !isRightHalf;
   if (!bitRead(USB1_PORTSC1, 7)) {
     //usb connected
     isPrimary = true;
@@ -46,28 +46,24 @@ void loop() {
 
     if (isPrimary) {
 
-      readBall();
+      if (readBall(ballMotionBuffer)) {
+        processBallMotionData(ballMotionBuffer[0], ballMotionBuffer[1], 0, 0, !isRightHalf);
+        initBallBuf();
+      }
       if (readKeys(keyBufSize, keyBuffer)) {
-
         processKeyStates(isRightHalf, keyBufSize, keyBuffer);
-        //printBytes(keyBuffer, keyBufSize);
         initKeyBuf();
       }
-      if (readSecondary(keyBufSize, keyBuffer)) {
-
-        //printBytes(keyBuffer, keyBufSize);
+      if (readSecondary()) {
         processKeyStates(!isRightHalf, keyBufSize, keyBuffer);
+        processBallMotionData(0, 0, ballMotionBuffer[1], ballMotionBuffer[0], !isRightHalf);
+        initKeyBuf();
+        initBallBuf();
       }
     } else {
 
-
+      readBall(ballMotionBuffer);
       readKeys(keyBufSize, keyBuffer);
-
-      //   if (readKeys(keyBufSize, keyBuffer)) {
-      //processKeyStates(isRightHalf, keyBufSize, keyBuffer);
-      //   printBytes(keyBuffer, keyBufSize);
-      //   initKeyBuf();
-      // }
     }
 
 
@@ -79,6 +75,12 @@ void loop() {
 void initKeyBuf() {
   for (int i = 0; i < keyBufSize; i++) {
     keyBuffer[i] = 0;
+  }
+}
+
+void initBallBuf() {
+  for (int i = 0; i < ballBufSize; i++) {
+    ballMotionBuffer[i] = 0;
   }
 }
 

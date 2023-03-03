@@ -20,25 +20,42 @@ void setupI2c(bool isPrimary) {
 }
 
 void kbReadBytes() {
-  //Serial.println("req");  // as expected by master;
-  //readKeys(keyBufSize, keyBuffer);
-  Wire.write(keyBuffer, keyBufSize);
+  uint8_t data[sizeof(keyBuffer) + sizeof(ballMotionBuffer)];
+  memcpy(data, &keyBuffer, sizeof(keyBuffer));
+  memcpy(data + sizeof(keyBuffer), &ballMotionBuffer, sizeof(ballMotionBuffer));
+
+  Wire.write(data, sizeof(data));
   initKeyBuf();  //clear buff after sending
+  initBallBuf();
 }
 
-bool readSecondary(int keyBufSize, byte* keyBuffer) {
+bool readSecondary() {
   byte idx = 0;
-  Wire.requestFrom(SECONDARY_ADDR, keyBufSize);
-  while (Wire.available()) {  // peripheral may send less than requested
-    char c = Wire.read();     // receive a byte as character
-    keyBuffer[idx++] = c;     // receive a byte as character
+  Wire.requestFrom(SECONDARY_ADDR, keyBufSize + 4);
+  while (Wire.available() && idx < keyBufSize) {  // peripheral may send less than requested
+    char c = Wire.read();                         // receive a byte as character
+    keyBuffer[idx++] = c;                         // receive a byte as character
+  }
+  idx = 0;
+
+
+  while (Wire.available() && idx < 2) {
+    ballMotionBuffer[idx++] = Wire.read();
   }
 
+  
 
   for (int i = 0; i < keyBufSize; i++) {
     if (keyBuffer[i++] != 0) {
       return true;
     }
   }
+
+  for (int i = 0; i < ballBufSize; i++) {
+    if (ballMotionBuffer[i++] != 0) {
+      return true;
+    }
+  }
+
   return false;
 }
