@@ -41,7 +41,7 @@ void loop() {
   curTime = micros();
   unsigned long elapsed = curTime - lastTS;
 
-  if (elapsed >= 500)  // polling interval : more than > 0.5 ms.
+  if (elapsed >= 5000)  // polling interval : more than > 0.5 ms.
   {
 
     if (isPrimary) {
