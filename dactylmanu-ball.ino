@@ -1,7 +1,7 @@
 const int isRightPin = 7;
 const int isRightPinOut = 8;
 bool isPrimary = false;
-bool LOG = true;
+bool LOG = false;
 bool isRightHalf = false;
 unsigned long lastTS = 0;
 unsigned long curTime = micros();
