@@ -9,6 +9,7 @@ const int keyBufSize = 6;
 uint8_t keyBuffer[keyBufSize];
 const int ballBufSize = 2;
 int8_t ballMotionBuffer[ballBufSize];
+unsigned long lastMouseTime = 0;
 bool keysSent = true;
 void setup() {
   Serial.begin(57600);

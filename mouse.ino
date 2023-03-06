@@ -11,6 +11,7 @@
 #endif
 
 unsigned long lastWheelTime = 0;
+
 void processBallMotionData(int8_t x, int8_t y, bool invertXY) {
 
   if (invertXY) {
@@ -19,14 +20,14 @@ void processBallMotionData(int8_t x, int8_t y, bool invertXY) {
   }
 
   Mouse.move(x * -1, y, 0, 0);
+  lastMouseTime  = curTime;
 }
 
 void processWheelMotionData(int8_t wheel, int8_t horiz, bool invertWH) {
   unsigned long elapsed = curTime - lastWheelTime;
 
   if (elapsed < 40000) {
-    wheel = 0;
-    horiz = 0;
+    return;
   } else {
     lastWheelTime = curTime;
   }
@@ -50,5 +51,5 @@ void processWheelMotionData(int8_t wheel, int8_t horiz, bool invertWH) {
     horiz = horiz * -1;
   }
 
-  Mouse.move(0,0, wheel, horiz);
+  Mouse.move(0, 0, wheel, horiz);
 }

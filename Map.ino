@@ -16,6 +16,8 @@ const byte macro4 = 247;
 const byte colMask = 0xE0;
 const byte rowMask = 0X1C;
 
+bool tempMouseLeft = false;
+bool tempMouseRight = false;
 int leftKeyMap[layers][rowCount][colCount] = {
   { { KEY_EQUAL, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5 },
     { KEY_ESC, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T },
@@ -74,13 +76,21 @@ void processKeyStates(bool isRight, int keyBufSize, byte* keysBuffer) {
 }
 void handleKeyPress(int key, byte btnState, int keyIndex) {
   if (btnState == 1) {
-    if (key == lms) {
+    if (key == KEY_H && curTime - lastMouseTime < 400000) {
+      lastMouseTime += 200000;  // advance the time to allow more time for double clicks
+      Mouse.press(MOUSE_LEFT);
+      tempMouseLeft = true;
+    } else if (key == KEY_J && curTime - lastMouseTime < 400000) {
+      lastMouseTime += 200000;  // advance the time to allow more time for double clicks
+      Mouse.press(MOUSE_RIGHT);
+      tempMouseRight = true;
+    } else if (key == lms) {
       Mouse.press(MOUSE_LEFT);
     } else if (key == rms) {
       Mouse.press(MOUSE_RIGHT);
     } else if (key == bms) {
       Mouse.press(MOUSE_BACK);
-    }else if (key == mod) {
+    } else if (key == mod) {
       currentLayer = 1;
       println("layer 1");
     } else if (key == macro1) {
@@ -101,13 +111,19 @@ void handleKeyPress(int key, byte btnState, int keyIndex) {
       println(" pressed");
     }
   } else {
-    if (key == lms) {
+    if (key == KEY_H && tempMouseLeft) {
+      Mouse.release(MOUSE_LEFT);
+      tempMouseLeft = false;
+    } else if (key == KEY_J && tempMouseRight) {
+      Mouse.release(MOUSE_RIGHT);
+      tempMouseRight = false;
+    } else if (key == lms) {
       Mouse.release(MOUSE_LEFT);
     } else if (key == rms) {
       Mouse.release(MOUSE_RIGHT);
     } else if (key == bms) {
       Mouse.release(MOUSE_BACK);
-    }else if (key == mod) {
+    } else if (key == mod) {
       currentLayer = 0;
       println("layer 0");
     } else if (key == macro1) {
