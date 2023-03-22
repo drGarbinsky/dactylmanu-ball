@@ -118,7 +118,7 @@ void setupBall(bool isRightHalf) {
   //dispRegisters();
   initComplete = 9;
   if (!isRightHalf) {
-    setAngleTune(-30);
+    setAngleTune(-15);
   }
   lastTS = micros();
 
@@ -357,7 +357,7 @@ bool readBall(int8_t* motionData) {
 
   if (reportSQ && !surface)  // print surface quality
   {
-    println(squal);
+    Serial.println(squal);
   }
 
   lastTS = curTime;

@@ -1,13 +1,14 @@
 const int isRightPin = 7;
 const int isRightPinOut = 8;
 bool isPrimary = false;
-bool LOG = false;
+bool LOG = true;
 bool isRightHalf = false;
 unsigned long lastTS = 0;
 unsigned long curTime = micros();
 const int keyBufSize = 6;
 uint8_t keyBuffer[keyBufSize];
 const int ballBufSize = 2;
+const int tempMouseKeyTime=  500000; //microseconds
 int8_t ballMotionBuffer[ballBufSize];
 unsigned long lastMouseTime = 0;
 bool keysSent = true;
@@ -31,7 +32,7 @@ void setup() {
     println("Is Secondary");
   }
 
-
+  setupWatchdog();
   initKeyBuf();
   setupBall(isRightHalf);
   setupKeys();
@@ -57,7 +58,7 @@ void loop() {
       }
       if (readSecondary()) {
         processKeyStates(!isRightHalf, keyBufSize, keyBuffer);
-        processWheelMotionData( ballMotionBuffer[1], ballMotionBuffer[0], !isRightHalf);
+        processWheelMotionData(ballMotionBuffer[1], ballMotionBuffer[0], !isRightHalf);
         initKeyBuf();
         initBallBuf();
       }
@@ -70,6 +71,8 @@ void loop() {
 
     lastTS = curTime;
   }
+
+  //resetWatchdog();
 }
 
 

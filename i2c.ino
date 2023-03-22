@@ -4,6 +4,7 @@
 
 #define SECONDARY_ADDR 8
 
+I2CMaster& master = Master;
 void kbReadBytes();
 
 void setupI2c(bool isPrimary) {
@@ -27,6 +28,7 @@ void kbReadBytes() {
   Wire.write(data, sizeof(data));
   initKeyBuf();  //clear buff after sending
   initBallBuf();
+  resetWatchdog();
 }
 
 bool readSecondary() {
@@ -43,7 +45,9 @@ bool readSecondary() {
     ballMotionBuffer[idx++] = Wire.read();
   }
 
-  
+  if (idx > 0) {
+    resetWatchdog();
+  }
 
   for (int i = 0; i < keyBufSize; i++) {
     if (keyBuffer[i++] != 0) {
