@@ -13,13 +13,6 @@
 #define DEBOUNCE 10  //unit = ms.
 #define NUMCPI 4
 
-//Set this to a pin your buttons are attached
-#define NUMBTN 4
-#define Btn1_Pin 3  // left button
-#define Btn2_Pin 0  // right button
-#define Btn4_Pin 2  // middle button
-#define Btn8_Pin 1  // back button
-
 // Registers
 #define Product_ID 0x00
 #define Revision_ID 0x01
@@ -81,7 +74,7 @@ const int reset = 8;  // Optional
 
 
 
-unsigned long Cpis[NUMCPI] = { 400, 800, 1200, 2000 };
+unsigned long Cpis[NUMCPI] = { 400, 800, 1200, 1600 };
 struct CpiUpdater {
   bool target_set;
   bool updated;
@@ -102,15 +95,13 @@ unsigned long lastButtonCheck = 0;
 extern const unsigned short firmware_length;
 extern const unsigned char firmware_data[];
 bool invertXY = false;
-void setupBall(bool invert) {
-  invertXY = invert;
+void setupBall(bool isRightHalf) {
+  invertXY = !isRightHalf;
+  if (!isRightHalf) {
+    CpiUpdate = { false, false, 0 };  // Default Cpis[3] = 2000     
+  }
   pinMode(ncs, OUTPUT);
   pinMode(reset, INPUT_PULLUP);
-
-  pinMode(Btn1_Pin, INPUT_PULLUP);
-  pinMode(Btn2_Pin, INPUT_PULLUP);
-  pinMode(Btn4_Pin, INPUT_PULLUP);
-  pinMode(Btn8_Pin, INPUT_PULLUP);
 
   SPI.begin();
   SPI.setDataMode(SPI_MODE3);
@@ -126,10 +117,12 @@ void setupBall(bool invert) {
 
   //dispRegisters();
   initComplete = 9;
-
+  if (!isRightHalf) {
+    setAngleTune(-15);
+  }
   lastTS = micros();
 
-  MOUSE_BEGIN;
+  MOUSE_BEGIN;  // move me
 }
 
 void adns_com_begin() {
@@ -236,6 +229,7 @@ void performStartup(void) {
   adns_com_end();
   delayMicroseconds(40);
 
+  //
   adns_write_reg(Power_Up_Reset, 0x5a);  // force reset
   delay(50);                             // wait for it to reboot
 
@@ -253,7 +247,12 @@ void performStartup(void) {
   Serial.println("Optical Chip Initialized");
 }
 
+void setAngleTune(byte newAngle) {
+  adns_write_reg(Angle_Tune, newAngle);
 
+  print("Angle set to: ");
+  println(newAngle);
+}
 
 // device signature
 void dispRegisters(void) {
@@ -358,7 +357,7 @@ bool readBall(int8_t* motionData) {
 
   if (reportSQ && !surface)  // print surface quality
   {
-    println(squal);
+    Serial.println(squal);
   }
 
   lastTS = curTime;
@@ -380,6 +379,11 @@ bool readBall(int8_t* motionData) {
       case 'I':  // sensor info (signature)
         inBurst = false;
         dispRegisters();
+        break;
+      case 'A':  // set Angle tune
+        println("Set Angle");
+
+        setAngleTune(readNumber());
         break;
       case 'C':  // set CPI
         int newCPI = readNumber();

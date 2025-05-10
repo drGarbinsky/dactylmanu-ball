@@ -1,14 +1,16 @@
 const int isRightPin = 7;
 const int isRightPinOut = 8;
 bool isPrimary = false;
-bool LOG = false;
+bool LOG = true;
 bool isRightHalf = false;
 unsigned long lastTS = 0;
 unsigned long curTime = micros();
 const int keyBufSize = 6;
 uint8_t keyBuffer[keyBufSize];
 const int ballBufSize = 2;
+const int tempMouseKeyTime=  500000; //microseconds
 int8_t ballMotionBuffer[ballBufSize];
+unsigned long lastMouseTime = 0;
 bool keysSent = true;
 void setup() {
   Serial.begin(57600);
@@ -30,9 +32,9 @@ void setup() {
     println("Is Secondary");
   }
 
-
+  setupWatchdog();
   initKeyBuf();
-  setupBall(!isRightHalf);
+  setupBall(isRightHalf);
   setupKeys();
   setupI2c(isPrimary);
   Serial.println("Keyboad ready");
@@ -47,7 +49,7 @@ void loop() {
     if (isPrimary) {
 
       if (readBall(ballMotionBuffer)) {
-        processBallMotionData(ballMotionBuffer[0], ballMotionBuffer[1], 0, 0, !isRightHalf);
+        processBallMotionData(ballMotionBuffer[0], ballMotionBuffer[1], !isRightHalf);
         initBallBuf();
       }
       if (readKeys(keyBufSize, keyBuffer)) {
@@ -56,7 +58,7 @@ void loop() {
       }
       if (readSecondary()) {
         processKeyStates(!isRightHalf, keyBufSize, keyBuffer);
-        processBallMotionData(0, 0, ballMotionBuffer[1], ballMotionBuffer[0], !isRightHalf);
+        processWheelMotionData(ballMotionBuffer[1], ballMotionBuffer[0], !isRightHalf);
         initKeyBuf();
         initBallBuf();
       }
@@ -69,6 +71,8 @@ void loop() {
 
     lastTS = curTime;
   }
+
+  //resetWatchdog();
 }
 
 

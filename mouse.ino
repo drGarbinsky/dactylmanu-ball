@@ -11,41 +11,52 @@
 #endif
 
 unsigned long lastWheelTime = 0;
-void processBallMotionData(int8_t x, int8_t y, int8_t wheel, int8_t horiz, bool invertXY) {
-  unsigned long elapsed = curTime - lastWheelTime;
 
-  if (elapsed < 50000) {
-    wheel = 0;
-    horiz = 0;
-  } else {
-    lastWheelTime = curTime;
-  }
-
-  if (wheel <= 1 && wheel >= -1) {
-    wheel = 0;
-  } else {
-    wheel = wheel / 2;
-    print("wheel: ");
-    println(wheel);
-  }
-
-  if (horiz <= 1 && horiz >= -1) {
-    horiz = 0;
-  } else {
-    horiz = horiz / 2;
-    print("horiz: ");
-    println(horiz);
-  }
+void processBallMotionData(int8_t x, int8_t y, bool invertXY) {
 
   if (invertXY) {
     x = x * -1;
     y = y * -1;
+  }
 
+  Mouse.move(x * -1, y, 0, 0);
+  lastMouseTime = curTime;
+}
+
+void processWheelMotionData(int8_t wheel, int8_t horiz, bool invertWH) {
+  unsigned long elapsed = curTime - lastWheelTime;
+
+  if (elapsed < 40000) {
+    return;
+  } else {
+    lastWheelTime = curTime;
+  }
+
+  if (abs(wheel) <= 1) {
+    wheel = 0;
+  }
+
+  if (abs(horiz) <= 1) {
+    horiz = 0;
+  }
+
+  if (invertWH) {
     wheel = wheel * -1;
     horiz = horiz * -1;
   }
 
+  if (abs(wheel) > abs(horiz)) {
+    horiz = 0;
+  } else if (abs(horiz) > abs(wheel)) {
+    wheel = 0;
+  }
 
+  if (wheel != 0 || horiz != 0) {
+    print("w: ");
+    print(wheel);
+    print(" h: ");
+    println(horiz);
 
-  Mouse.move(x * -1, y, wheel, horiz);
+    Mouse.move(0, 0, wheel, horiz);
+  }
 }
