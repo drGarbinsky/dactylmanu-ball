@@ -56,7 +56,7 @@ int rightKeyMap[layers][rowCount][colCount] = {
 
 int (*keyMap)[rowCount][colCount] = rightKeyMap;
 
-void processKeyStates(bool isRight, int keyBufSize, byte* keysBuffer) {
+void  processKeyStates(bool isRight, int keyBufSize, byte* keysBuffer) {
   if (isRight == false) {
     keyMap = leftKeyMap;
   } else {
@@ -76,15 +76,16 @@ void processKeyStates(bool isRight, int keyBufSize, byte* keysBuffer) {
 }
 void handleKeyPress(int key, byte btnState, int keyIndex) {
   if (btnState == 1) {
-    if (key == KEY_H && curTime - lastMouseTime < tempMouseKeyTime) {
-      lastMouseTime += 250000;  // advance the time to allow more time for double clicks
-      Mouse.press(MOUSE_LEFT);
-      tempMouseLeft = true;
-    } else if (key == KEY_J && curTime - lastMouseTime < tempMouseKeyTime) {
-      lastMouseTime += 250000;  // advance the time to allow more time for double clicks
-      Mouse.press(MOUSE_RIGHT);
-      tempMouseRight = true;
-    } else if (key == lms) {
+    // if (key == KEY_H && curTime - lastMouseTime < tempMouseKeyTime) {
+    //   lastMouseTime += 250000;  // advance the time to allow more time for double clicks
+    //   Mouse.press(MOUSE_LEFT);
+    //   tempMouseLeft = true;
+    // } else if (key == KEY_J && curTime - lastMouseTime < tempMouseKeyTime) {
+    //   lastMouseTime += 250000;  // advance the time to allow more time for double clicks
+    //   Mouse.press(MOUSE_RIGHT);
+    //   tempMouseRight = true;
+    // } else
+     if (key == lms) {
       Mouse.press(MOUSE_LEFT);
     } else if (key == rms) {
       Mouse.press(MOUSE_RIGHT);

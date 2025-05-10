@@ -1,6 +1,5 @@
 //################### keyboard #########################
 
-
 byte rows[] = { 23, 22, 21, 20, 15, 14, 9 };
 const int rowCount = sizeof(rows) / sizeof(rows[0]);
 

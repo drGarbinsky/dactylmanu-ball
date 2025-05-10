@@ -8,12 +8,19 @@ unsigned long curTime = micros();
 const int keyBufSize = 6;
 uint8_t keyBuffer[keyBufSize];
 const int ballBufSize = 2;
-const int tempMouseKeyTime=  500000; //microseconds
+const int tempMouseKeyTime = 500000;  //microseconds
 int8_t ballMotionBuffer[ballBufSize];
 unsigned long lastMouseTime = 0;
+const int ledPin = 13;
 bool keysSent = true;
+extern "C" uint32_t set_arm_clock(uint32_t frequency); // required prototype
+
 void setup() {
-  Serial.begin(57600);
+  // initialize the digital pin as an output.
+  set_arm_clock (150000000);
+  pinMode(ledPin, OUTPUT);
+
+  Serial.begin(9600);
   Serial.println("Dactyl Manuball 2.0 starting...");
   isRightHalf = isRight();
   if (isRightHalf) {
@@ -30,6 +37,7 @@ void setup() {
     //usb disconnected
     isPrimary = false;
     println("Is Secondary");
+    flashLed();
   }
 
   setupWatchdog();
@@ -39,19 +47,34 @@ void setup() {
   setupI2c(isPrimary);
   Serial.println("Keyboad ready");
 }
+void flashLed() {
+  digitalWrite(ledPin, LOW);
+  delay(100);
+  digitalWrite(ledPin, HIGH);  // set the LED on
+  delay(100);
+  digitalWrite(ledPin, LOW);
+  delay(100);
+  digitalWrite(ledPin, HIGH);  // set the LED on
+  delay(100);
+  digitalWrite(ledPin, LOW);
+  delay(100);
+  digitalWrite(ledPin, HIGH);
+  delay(100);
+  digitalWrite(ledPin, LOW);
+}
 void loop() {
+
   curTime = micros();
   unsigned long elapsed = curTime - lastTS;
-
   if (elapsed >= 5000)  // polling interval : more than > 0.5 ms.
   {
 
     if (isPrimary) {
 
-      if (readBall(ballMotionBuffer)) {
-        processBallMotionData(ballMotionBuffer[0], ballMotionBuffer[1], !isRightHalf);
-        initBallBuf();
-      }
+       if (readBall(ballMotionBuffer)) {
+         processBallMotionData(ballMotionBuffer[0], ballMotionBuffer[1], !isRightHalf);
+         initBallBuf();
+       }
       if (readKeys(keyBufSize, keyBuffer)) {
         processKeyStates(isRightHalf, keyBufSize, keyBuffer);
         initKeyBuf();

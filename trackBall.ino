@@ -115,7 +115,7 @@ void setupBall(bool isRightHalf) {
 
   delay(500);
 
-  //dispRegisters();
+  dispRegisters();
   initComplete = 9;
   if (!isRightHalf) {
     setAngleTune(-15);
@@ -393,6 +393,8 @@ bool readBall(int8_t* motionData) {
   }
 
   return motion;
+
+  return true;
 }
 
 unsigned long readNumber() {

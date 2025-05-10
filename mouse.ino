@@ -20,6 +20,7 @@ void processBallMotionData(int8_t x, int8_t y, bool invertXY) {
   }
 
   Mouse.move(x * -1, y, 0, 0);
+  //print("X: "); printInt(x); print(" Y: "); printInt(y); println("");
   lastMouseTime = curTime;
 }
 
